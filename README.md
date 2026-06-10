@@ -36,7 +36,7 @@ Built for **Per Scholas SBA 308A: JavaScript Web Application**.
 
 ## Running locally
 
-ES modules will not load over `file://` — the app must be served over HTTP.
+ES modules will not load over `file://` the app must be served over HTTP.
 
 1. Clone the repo and `cd` into it.
 2. Get a free NASA API key at [api.nasa.gov](https://api.nasa.gov/) (instant email) and place it in `js/config.js`. The key committed here, if any, is rate-limited and for grading convenience only.
@@ -49,8 +49,8 @@ ES modules will not load over `file://` — the app must be served over HTTP.
 
 ## Project status
 
-🚧 In active development — see commit history for progress. Build order: core requirements first (API fetch, paginated search, CRUD, modules, error handling), presentation second, stretch features last.
+🚧 In active development see commit history for progress. Build order: core requirements first (API fetch, paginated search, CRUD, modules, error handling), presentation second, stretch features last.
 
 ## Reflection
 
-*(To be completed at submission — planning takeaways, hardest requirement, and what I'd add with more time.)*
+*(To be completed at submission planning takeaways, hardest requirement, and what I'd add with more time.)*
