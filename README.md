@@ -24,7 +24,7 @@ Built for **Per Scholas SBA 308A: JavaScript Web Application**.
 | [NASA Image and Video Library](https://images-api.nasa.gov) (`/search`) | image search + pagination | GET |
 | [NASA APOD](https://api.nasa.gov) | daily featured image | GET |
 | [MockAPI.io](https://mockapi.io) (`entries` resource) | persistent journal storage | GET, POST, PUT, DELETE |
-| [Crom](https://crom.avn.sh) *(stretch)* | SCP Wiki search | POST (GraphQL query — semantically a read) |
+| [Crom](https://crom.avn.sh) *(stretch)* | SCP Wiki search | POST (GraphQL query semantically a read) |
 
 ## Tech notes
 
