@@ -12,21 +12,21 @@ const state = {
 
 // Race guard: each call claims a token; only the newest one is allowed
 // to write to the DOM, so a slow earlier request can't clobber a fast later one.
-let latestToken = 0;
+let requestToken = 0;
 
 // loadPage(): fetch the current query/page and render it.
 async function loadPage() {
-    const token = ++latestToken;           // 1. claim this request
+    const token = ++requestToken;           // 1. claim this request
     setStatus('retrieving...');
     try {
         const data = await searchImages(state.query, state.page);
-        if (token !== latestToken) return; // 2. a newer request started bail
+        if (token !== requestToken) return; // 2. a newer request started bail
         state.totalHits = data.totalHits;
         state.results = data.results;
         renderGallery(data.results);
         setStatus('');
     } catch (error) {
-        if (token !== latestToken) return; // 3. stale error ignore it
+        if (token !== requestToken) return; // 3. stale error ignore it
         setStatus(error.message);
     }
 }
