@@ -1,13 +1,17 @@
 // Import the API + UI helpers
 import { searchImages } from './nasaApi.js';
-import { renderGallery, setStatus } from './ui.js';
+import { getEntries, createEntry, updateEntry, deleteEntry } from './journalApi.js';
+import { renderGallery, renderEntries, setStatus } from './ui.js';
 
 // App state the single source of truth for what's on screen
 const state = {
     query: 'earth',
     page: 1,
     totalHits: 0,
-    results: [],   // the items currently rendered looked up on card click
+    results: [],            // gallery items currently rendered — looked up on card click
+    entries: [],            // saved journal entries from the API
+    selectedFragment: null, // the NASA item a new entry is being created from
+    editingId: null,        // id of the entry being edited, or null when creating
 };
 
 // Race guard: each call claims a token; only the newest one is allowed
@@ -50,6 +54,21 @@ document.getElementById('prev-btn').addEventListener('click', () => {
     loadPage();
 });
 
+// --- Entry dialog references ---
+const dialog = document.getElementById('entry-form-dialog');
+const form = document.getElementById('entry-form');
+const titleInput = document.getElementById('entry-title');
+const bodyInput = document.getElementById('entry-body');
+const classificationInput = document.getElementById('entry-classification');
+
+// closeDialog(): close + reset everything so the next open starts clean.
+function closeDialog() {
+    dialog.close();
+    form.reset();
+    state.editingId = null;
+    state.selectedFragment = null;
+}
+
 // Gallery clicks: ONE delegated listener on the container, not one per card.
 // Cards are re-created on every render, so binding here survives re-renders.
 document.getElementById('gallery').addEventListener('click', (event) => {
@@ -57,8 +76,98 @@ document.getElementById('gallery').addEventListener('click', (event) => {
     if (!card) return;   // clicked the gap between cards ignore
     const item = state.results.find(r => r.nasaId === card.dataset.nasaId);
     if (!item) return;
-    console.log('card clicked:', item);   // TODO: open entry dialog for this item
+    // Card click → start a NEW entry from this fragment
+    state.selectedFragment = item;
+    state.editingId = null;
+    form.reset();
+    dialog.showModal();
 });
 
-// Initial load show the default query right away
-loadPage();
+// Entry list clicks: ONE delegated listener handling both Edit and Delete.
+document.getElementById('entries-list').addEventListener('click', async (event) => {
+    const article = event.target.closest('.entry');
+    if (!article) return;
+    const id = article.dataset.id;
+
+    if (event.target.closest('.edit-btn')) {
+        // Edit → prefill the form from the entry, remember which one we're editing
+        const entry = state.entries.find(e => e.id === id);
+        if (!entry) return;
+        state.editingId = id;
+        state.selectedFragment = null;
+        titleInput.value = entry.title;
+        bodyInput.value = entry.body;
+        classificationInput.value = entry.classification;
+        dialog.showModal();
+    } else if (event.target.closest('.delete-btn')) {
+        // Delete → remove on the server, then drop from state and re-render
+        try {
+            await deleteEntry(id);
+            state.entries = state.entries.filter(e => e.id !== id);
+            renderEntries(state.entries);
+        } catch (error) {
+            setStatus(error.message);
+        }
+    }
+});
+
+// Form submit: branches create-vs-update on state.editingId.
+form.addEventListener('submit', async (event) => {
+    event.preventDefault();   // CRITICAL: a plain <form> would reload the page and wipe state
+
+    // The fields the user typed
+    const fields = {
+        title: titleInput.value,
+        body: bodyInput.value,
+        classification: classificationInput.value,
+    };
+
+    try {
+        if (state.editingId) {
+            // UPDATE: merge over the existing entry so PUT doesn't drop
+            // nasaId / imageUrl / createdAt (PUT replaces the whole record).
+            const existing = state.entries.find(e => e.id === state.editingId);
+            const updated = await updateEntry(state.editingId, { ...existing, ...fields });
+            const idx = state.entries.findIndex(e => e.id === state.editingId);
+            if (idx !== -1) state.entries[idx] = updated;
+        } else {
+            // CREATE: combine the typed fields with the selected fragment + a timestamp
+            const newEntry = {
+                ...fields,
+                nasaId: state.selectedFragment?.nasaId,
+                imageUrl: state.selectedFragment?.imageUrl,
+                createdAt: new Date().toISOString(),
+            };
+            const created = await createEntry(newEntry);
+            state.entries.push(created);
+        }
+        renderEntries(state.entries);
+        closeDialog();   // clears editingId / selectedFragment after
+    } catch (error) {
+        setStatus(error.message);
+    }
+});
+
+// New Entry button → open a blank dialog (no fragment, not editing)
+document.getElementById('new-entry-btn').addEventListener('click', () => {
+    state.selectedFragment = null;
+    state.editingId = null;
+    form.reset();
+    dialog.showModal();
+});
+
+// Cancel just closes + clears, no save
+document.getElementById('entry-cancel-btn').addEventListener('click', closeDialog);
+
+// --- Initial load ---
+loadPage();   // show the default gallery query right away
+
+// Load any previously saved entries so they survive a refresh
+(async () => {
+    try {
+        state.entries = await getEntries();
+        renderEntries(state.entries);
+    } catch (error) {
+        setStatus(error.message);
+    }
+})();
