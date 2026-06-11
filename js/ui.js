@@ -11,9 +11,10 @@ export function renderGallery(results) {
     // 2. Build all cards off-screen in a fragment (no reflow per card)
     const fragment = document.createDocumentFragment();
 
-    for (const { imageUrl, title } of results) {
+    for (const { nasaId, imageUrl, title } of results) {
         const card = document.createElement('article');
         card.className = 'card';
+        card.dataset.nasaId = nasaId;   // lets delegated clicks identify the card
 
         const img = document.createElement('img');
         img.src = imageUrl;
