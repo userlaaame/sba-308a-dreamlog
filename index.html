@@ -1,12 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script type="module" src="./js/main.js"></script>
-    <title>Document</title>
+    <title>Dream Log</title>
+    <script type="module" src="./js/main.js" defer></script>
+
 </head>
+
 <body>
-    
+    <header>Dream log</header>
+    <p id="status" role="status">
+        <!-- loads with error messages -->
+    </p>
+    <section id="search-bar">
+        <input type="text" id="search-input" placeholder="search the archive">
+        <button id="search-btn">Search</button>
+    </section>
+    <section id="gallery"></section>
+    <nav id="pagination">
+        <button id="prev-btn">◀</button>
+        <span id="page-indicator">page 1</span>
+        <button id="next-btn">▶</button>
+    </nav>
+    <section id="journal">
+        <h2>Containment Log</h2>
+        <div id="entries-list"></div>
+    </section>
+    <!-- to make the browser handle hiding -->
+    <dialog id="entry-form-dialog">
+        <form id="entry-form">
+            <h2>New Entry</h2>
+            <input type="text" id="entry-title" placeholder="entry title">
+            <textarea id="entry-body" placeholder="what it looked like in the dream..."></textarea>
+            <select id="entry-classification">
+                <option value="Safe">Safe</option>
+                <option value="Euclid">Euclid</option>
+                <option value="Keter">Keter</option>
+            </select>
+            <button type="submit" id="entry-save-btn">Save</button>
+            <button type="button" id="entry-cancel-btn">Cancel</button>
+        </form>
+    </dialog>
 </body>
+
 </html>
