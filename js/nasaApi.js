@@ -1,9 +1,8 @@
-// app/api/nasa-search/route.js
+import { NASA_API_KEY, NASA_IMAGES_BASE_URL } from './config.js';
 
-// Default to 'earth' if missing
 export async function searchImages(query = 'earth', page = 1) {
     // 1. Build the NASA API URL using the URL class
-    const nasaUrl = new URL('https://images-api.nasa.gov/search');
+    const nasaUrl = new URL(`${NASA_IMAGES_BASE_URL}/search`);
 
     // 2. Use searchParams to safely append query strings
     nasaUrl.searchParams.set('q', query);
