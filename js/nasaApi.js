@@ -17,5 +17,17 @@ export async function searchImages(query = 'earth', page = 1) {
     }
 
     // 4. Parse and return the data
-    return await response.json();
-}   
+    const data = await response.json();
+
+    // 5. Clean: filter + map into Fragment shape
+    const results = data.collection.items
+        .filter(item => item.links?.[0]?.href)
+        .map(item => ({
+            nasaId: item.data[0].nasa_id,
+            title: item.data[0].title,
+            description: item.data[0].description,
+            imageUrl: item.data[0].href,
+        }));
+    // 6. Return the clean shape
+    return { results, totalHits: data.collection.metadata.total_hits };
+}   //build URL -> set params -> fetch -> !ok throw -> parse into data -> transform data into results -> return the clean object. 
