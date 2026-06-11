@@ -31,7 +31,7 @@ async function loadPage() {
         setStatus('');
     } catch (error) {
         if (token !== requestToken) return; // 3. stale error ignore it
-        setStatus(error.message);
+        setStatus('The archive is unreachable. Fragment lost.');
     }
 }
 
@@ -106,7 +106,7 @@ document.getElementById('entries-list').addEventListener('click', async (event) 
             state.entries = state.entries.filter(e => e.id !== id);
             renderEntries(state.entries);
         } catch (error) {
-            setStatus(error.message);
+            setStatus('The fragment resists deletion. It remains contained.');
         }
     }
 });
@@ -144,7 +144,7 @@ form.addEventListener('submit', async (event) => {
         renderEntries(state.entries);
         closeDialog();   // clears editingId / selectedFragment after
     } catch (error) {
-        setStatus(error.message);
+        setStatus('Containment failed. The entry was not logged.');
     }
 });
 
@@ -159,15 +159,27 @@ document.getElementById('new-entry-btn').addEventListener('click', () => {
 // Cancel just closes + clears, no save
 document.getElementById('entry-cancel-btn').addEventListener('click', closeDialog);
 
-// --- Initial load ---
-loadPage();   // show the default gallery query right away
-
-// Load any previously saved entries so they survive a refresh
+// --- Startup ---
+// Promise.all here because the gallery and the saved entries are INDEPENDENT
+// requests and we want BOTH before the first paint — neither supersedes the other,
+// so we fire them together and wait for the pair.
+// (Contrast loadPage's latest-wins token guard: rapid prev/next clicks SUPERSEDE
+//  each other — there we only want the LATEST response, not all of them. Different
+//  problem, different tool: Promise.all for "want both", token guard for "want latest".)
 (async () => {
+    setStatus('retrieving...');
     try {
-        state.entries = await getEntries();
-        renderEntries(state.entries);
+        const [search, entries] = await Promise.all([
+            searchImages(state.query, state.page),
+            getEntries(),
+        ]);
+        state.totalHits = search.totalHits;
+        state.results = search.results;
+        state.entries = entries;
+        renderGallery(search.results);
+        renderEntries(entries);
+        setStatus('');
     } catch (error) {
-        setStatus(error.message);
+        setStatus('The archive is unreachable. Fragment lost.');
     }
 })();
